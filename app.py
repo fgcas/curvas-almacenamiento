@@ -18,7 +18,7 @@ st.markdown("""
 
 # --- SECCIÓN 1: INGRESO DE DATOS ---
 st.sidebar.header("1. Datos de Entrada")
-texto_input = st.sidebar.text_area("Pegar datos (Cota | Volumen) sin encabezados:", height=500)
+texto_input = st.sidebar.text_area("Pegar datos (Cota | Volumen) sin encabezados:", height=600)
 
 df = None
 
@@ -34,12 +34,12 @@ if texto_input:
         # Creamos la variable desplazada para el ajuste
         df['X_Shift'] = df['Cota'] - cota_min
         
-        st.sidebar.success(f"✅ Datos cargados. Cota Mínima detectada: {cota_min}")
+        st.sidebar.success(f"✅ Datos cargados correctamente.")
     except Exception as e:
         st.sidebar.error(f"Error leyendo datos: {e}")
 
 # --- SECCIÓN 2: CÁLCULO Y VISUALIZACIÓN ---
-if st.button("📊 Calcular Modelos (Grados 1-6)"):
+if st.button("📊 Calcular Ecuaciones"):
     if df is not None:
         x_real = df['Cota']
         x_shift = df['X_Shift'] # Usamos esta para el fit
@@ -74,7 +74,7 @@ if st.button("📊 Calcular Modelos (Grados 1-6)"):
                 fig.add_trace(go.Scatter(
                     x=x_range, y=y_curve, mode='lines', 
                     name=f'G{grado} (R²={r2:.4f})',
-                    visible='legendonly' if grado > 3 else True
+                    # visible='legendonly' if grado > 3 else True
                 ))
 
                 # 4. Construcción del String solicitado
@@ -96,13 +96,13 @@ if st.button("📊 Calcular Modelos (Grados 1-6)"):
                 
                 # --- MOSTRAR RESULTADO ---
                 # Usamos st.text para que sea fácil de copiar y pegar tal cual pediste
-                header_str = f"Grado {grado} | R² = {r2:.8f}"
+                header_str = f"Grado {grado} | R² = {r2:.10f}"
                 body_str = f"y = {ecuacion_str}"
                 
                 with st.expander(header_str, expanded=True):
-                    st.code(f"{header_str} | {body_str}", language="text")
+                    st.code(f"{body_str}", language="text")
                     # Versión LaTeX para informes visuales
-                    st.latex(f"R^2 = {r2:.4f}")
+                    # st.latex(f"y = {ecuacion_str}")
 
             except Exception as e:
                 st.error(f"Error en Grado {grado}: {e}")
@@ -122,6 +122,8 @@ st.divider()
 
 # --- SECCIÓN 3: INTERPOLACIÓN LINEAL ---
 st.header("3. Interpoladora Lineal")
+st.markdown(f"Esta calculadora interpola linealmente el volumen con respecto a las cotas de los datos de entrada")
+
 col1, col2 = st.columns(2)
 with col1:
     try:
@@ -131,6 +133,6 @@ with col1:
 with col2:
     if df is not None:
         val = np.interp(cota_input, df['Cota'], df['Volumen'])
-        st.metric("Volumen Interpolado", f"{val:,.3f}")
+        st.metric(f"Volumen Interpolado para la cota {cota_input}", f"{val:,.3f} m³")
     else:
         st.write("Esperando datos...")
