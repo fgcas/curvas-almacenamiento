@@ -124,7 +124,10 @@ st.divider()
 st.header("3. Interpoladora Lineal")
 col1, col2 = st.columns(2)
 with col1:
-    cota_input = st.number_input("Cota a buscar:", value=cota_min, format="%.3f")
+    try:
+        cota_input = st.number_input("Cota a buscar:", value=cota_min, format="%.3f")
+    except:
+        cota_input = st.number_input("Cota a buscar:", value=0.00, format="%.3f")
 with col2:
     if df is not None:
         val = np.interp(cota_input, df['Cota'], df['Volumen'])
