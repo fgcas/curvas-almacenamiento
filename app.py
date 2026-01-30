@@ -117,6 +117,9 @@ if st.button("📊 Calcular Ecuaciones"):
 
     else:
         st.warning("⚠️ Carga datos primero.")
+    if not texto_input:
+        st.info("💡 **Instrucciones:** Copia dos columnas desde Excel (Cota y Volumen) y pégalas en el cuadro de la izquierda para comenzar.")
+
 
 st.divider()
 
