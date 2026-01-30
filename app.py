@@ -59,7 +59,7 @@ if os.path.exists(FILE_PATH):
         # Mostrar tabla resumen en Sidebar
         st.sidebar.success(f"✅ Datos cargados: {len(df_filtrado)} registros")
         st.sidebar.markdown(f"**Rango Cota:** {cota_min_ref} - {cota_max_ref} m")
-        st.sidebar.dataframe(df_filtrado[['Cota', 'Volumen']], height=250, use_container_width=True)
+        st.sidebar.dataframe(df_filtrado[['Cota', 'Volumen']], height=500, use_container_width=True)
 
     except Exception as e:
         st.error(f"Error leyendo el archivo: {e}")
@@ -125,12 +125,12 @@ if df_filtrado is not None:
                 
                 # Formateo condicional para limpieza visual
                 if i == 0: # Primer término sin signo extra si es positivo
-                    term_str = f"({c:.8f} * (x - {cota_min_ref})^{potencia})"
+                    term_str = f"({c:.12f} * (x - {cota_min_ref})^{potencia})"
                 else:
                     if potencia > 0:
-                        term_str = f"{signo} ({val_abs:.8f} * (x - {cota_min_ref})^{potencia})"
+                        term_str = f"{signo} ({val_abs:.12f} * (x - {cota_min_ref})^{potencia})"
                     else:
-                        term_str = f"{signo} ({val_abs:.8f})" # Término independiente
+                        term_str = f"{signo} ({val_abs:.12f})" # Término independiente
                 
                 terms.append(term_str)
             
