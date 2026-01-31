@@ -34,8 +34,8 @@ df_filtrado = None
 cota_min_ref = 0.0
 cota_max_ref = 0.0
 
-# --- 1. CARGA DE DATOS AUTOMÁTICA ---
-st.sidebar.header("1. Panel de Control")
+# --- CARGA DE DATOS AUTOMÁTICA ---
+st.sidebar.header(":blue[Datos]")
 
 if os.path.exists(FILE_PATH):
     try:
@@ -58,7 +58,7 @@ if os.path.exists(FILE_PATH):
 
         st.sidebar.success(f"✅ Datos cargados: {len(df_filtrado)} registros")
         st.sidebar.markdown(f"**Rango Cota:** {cota_min_ref} - {cota_max_ref} m")
-        st.sidebar.dataframe(df_filtrado[['Cota', 'Volumen']], height=250, use_container_width=True)
+        st.sidebar.dataframe(df_filtrado[['Cota', 'Volumen']], height=800, use_container_width=True)
 
     except Exception as e:
         st.error(f"Error leyendo el archivo: {e}")
@@ -75,7 +75,7 @@ if df_filtrado is not None:
     y_real = df_filtrado['Volumen'].values
 
     # --- A. GRÁFICO ---
-    st.subheader(f"📊 Curva Característica: {poza_seleccionada}")
+    st.subheader(f"📊 Curva Característica de llenado en Poza: {poza_seleccionada}")
     
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=x_real, y=y_real, mode='markers', name='Datos Reales',
@@ -103,8 +103,8 @@ if df_filtrado is not None:
                 variaciones_pct = np.nan_to_num(variaciones_pct, nan=0.0, posinf=0.0, neginf=0.0)
 
             # Promedio omitiendo los primeros 5 datos (si existen)
-            if len(variaciones_pct) > 5:
-                promedio_var_pct = np.mean(variaciones_pct[5:])
+            if len(variaciones_pct) > 6:
+                promedio_var_pct = np.mean(variaciones_pct[6:])
             else:
                 promedio_var_pct = np.mean(variaciones_pct)
 
@@ -112,8 +112,8 @@ if df_filtrado is not None:
             y_curve = model(x_range_shift)
             fig.add_trace(go.Scatter(
                 x=x_range, y=y_curve, mode='lines', 
-                name=f'G{grado} (Var {promedio_var_pct:.2f}%)',
-                visible='legendonly' if grado > 3 else True
+                name=f'G{grado} (Var {promedio_var_pct:.2f}%) R²={r2:.8f}',
+                # visible='legendonly' if grado > 3 else True
             ))
             
             # String Ecuación
@@ -123,12 +123,12 @@ if df_filtrado is not None:
                 signo = "+" if c >= 0 else "-"
                 val_abs = abs(c)
                 if i == 0:
-                    term_str = f"({c:.8f} * (x - {cota_min_ref})^{potencia})"
+                    term_str = f"({c:.12f} * (x - {cota_min_ref})^{potencia})"
                 else:
                     if potencia > 0:
-                        term_str = f"{signo} ({val_abs:.8f} * (x - {cota_min_ref})^{potencia})"
+                        term_str = f"{signo} ({val_abs:.12f} * (x - {cota_min_ref})^{potencia})"
                     else:
-                        term_str = f"{signo} ({val_abs:.8f})"
+                        term_str = f"{signo} ({val_abs:.12f})"
                 terms.append(term_str)
             
             ec_str = " ".join(terms)
@@ -146,7 +146,7 @@ if df_filtrado is not None:
         except:
             pass
 
-    fig.update_layout(height=500, template="plotly_white", 
+    fig.update_layout(height=600, template="plotly_white", 
                       xaxis_title="Cota (m.s.n.m)", yaxis_title="Volumen (m³)",
                       hovermode="x unified", legend=dict(orientation="h", y=-0.2))
     
@@ -154,9 +154,8 @@ if df_filtrado is not None:
 
     st.divider()
 
-    # --- B. ECUACIONES (EXPANDIDAS) ---
+    # --- ECUACIONES ---
     st.subheader("📐 Ecuaciones Generadas")
-    st.caption(f"Nota: Variación promedio calculada ignorando los primeros 5 registros.")
 
     # Identificar la MEJOR ecuación (Menor variación %)
     mejor_modelo_idx = min(range(len(resultados_data)), key=lambda i: resultados_data[i]['variacion_pct'])
@@ -165,20 +164,18 @@ if df_filtrado is not None:
     col_eq1, col_eq2 = st.columns(2)
 
     for i, item in enumerate(resultados_data):
-        target_col = col_eq1 if i % 2 == 0 else col_eq2
         es_mejor = (i == mejor_modelo_idx)
         
-        titulo = f"Grado {item['grado']} | R²={item['r2']:.4f} | Var={item['variacion_pct']:.2f}%"
-        if es_mejor: titulo = "⭐ RECOMENDADA: " + titulo
+        titulo = f"Grado {item['grado']} | R²={item['r2']:.10f} | Var={item['variacion_pct']:.2f}%"
+        if es_mejor: titulo = "⭐ :red[RECOMENDADA]: " + titulo
 
-        with target_col:
-            # Petición 2: Todas expandidas (expanded=True)
-            with st.expander(titulo, expanded=True):
+        # Todas expandidas (expanded=True)
+        with st.expander(titulo, expanded=True):
                 st.code(f"y = {item['ecuacion']}", language="text")
 
     st.divider()
 
-    # --- CONTROL CENTRALIZADO DE MODELO (Petición 4 y 6) ---
+    # --- CONTROL CENTRALIZADO DE MODELO ---
     st.info("👇 **Selecciona aquí** la ecuación que deseas usar para la tabla comparativa y los cálculos de campo.")
     
     # Crear opciones para el selectbox
@@ -197,8 +194,8 @@ if df_filtrado is not None:
 
     st.divider()
 
-    # --- C. ANÁLISIS DE PRECISIÓN (Petición 3) ---
-    st.header(f"4. Comparativa: Real vs Calculado (Grado {grado_seleccionado})")
+    # --- C. ANÁLISIS DE PRECISIÓN ---
+    st.header(f"Comparativa: Real vs Calculado (Grado {grado_seleccionado})")
     
     # Calcular variación porcentual fila por fila para la tabla
     with np.errstate(divide='ignore', invalid='ignore'):
@@ -206,27 +203,27 @@ if df_filtrado is not None:
         var_fila_pct = np.nan_to_num(var_fila_pct, nan=0.0)
 
     df_comparativo = pd.DataFrame({
-        'Cota': x_real,
-        'Volumen Real (m³)': y_real,
-        'Volumen Calc (m³)': modelo_activo['y_pred'],
-        'Variación (%)': var_fila_pct
+        'Cota': x_real[1:],
+        'Volumen Real (m³)': y_real[1:],
+        'Volumen Calculado (m³)': modelo_activo['y_pred'][1:],
+        'Variación (%)': var_fila_pct[1:]
     })
     
-    # Formateo visual (Petición 3: Variación en %)
+    # Formateo visual del cuadro de datos
     st.dataframe(
         df_comparativo.style.format({
             'Cota': "{:.2f}",
             'Volumen Real (m³)': "{:,.2f}",
-            'Volumen Calc (m³)': "{:,.2f}",
-            'Variación (%)': "{:.2f}%"
-        }).background_gradient(subset=['Variación (%)'], cmap="Reds"), 
-        use_container_width=True
+            'Volumen Calculado (m³)': "{:,.2f}",
+            'Variación (%)': "{:.3f}%"
+        }).background_gradient(subset=['Variación (%)'], cmap="Blues"), 
+        use_container_width=False, height=600
     )
 
     st.divider()
 
-    # --- D. INTERPOLADORA ORIGINAL (Petición 5 - Intacta) ---
-    st.subheader("🧮 Interpoladora Lineal Simple")
+    # --- INTERPOLADORA ORIGINAL ---
+    st.header("🧮 Interpoladora Lineal Simple")
     col_cal1, col_cal2 = st.columns([1, 2])
     with col_cal1:
         cota_input = st.number_input("Ingresar Cota:", min_value=float(cota_min_ref)-10, max_value=float(cota_max_ref)+10, value=float(cota_min_ref), format="%.3f")
@@ -236,8 +233,8 @@ if df_filtrado is not None:
 
     st.divider()
 
-    # --- E. CALCULADORA DE CAMPO (Petición 6) ---
-    st.header(f"5. Estimación de Porcentaje de Llenado (Usando Grado {grado_seleccionado})")
+    # --- CALCULADORA DE CAMPO  ---
+    st.header(f"Estimación de Porcentaje de Llenado (Ecuación Grado {grado_seleccionado})")
     
     col_f1, col_f2, col_f3 = st.columns(3)
 
@@ -274,3 +271,8 @@ if df_filtrado is not None:
         
         st.metric("Porcentaje de Llenado", f"{porcentaje_llenado:.2f} %")
         st.progress(min(max(porcentaje_llenado/100, 0.0), 1.0))
+    
+    
+    st.divider()
+    
+    st.markdown("Desarrollado por [Frank Casanova](https://www.linkedin.com/in/frank-casanova/)")
