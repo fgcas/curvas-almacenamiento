@@ -146,9 +146,27 @@ if df_filtrado is not None:
         except:
             pass
 
-    fig.update_layout(height=600, template="plotly_white", 
-                      xaxis_title="Cota (m.s.n.m)", yaxis_title="Volumen (m³)",
-                      hovermode="x unified", legend=dict(orientation="h", y=-0.2))
+    fig.update_layout(height=800,
+                      template="plotly_white", 
+                      xaxis_title="Cota (m.s.n.m)",
+                      yaxis_title="Volumen (m³)",
+                      hovermode="x unified",
+                      legend=dict(orientation="h",
+                                  y=-0.2,
+                                  xanchor="center",
+                                  x=0.5,
+                                  yanchor="bottom",
+                                  bordercolor="gray",
+                                  borderwidth=1),
+                      title={'text': f"Curva Cota-Volumen de Poza {poza_seleccionada}",
+                            'y':0.95,
+                            'x':0.5,
+                            'xanchor': 'center',
+                            'yanchor': 'top',
+                            'font': dict(size=24, color='Black')},
+                            )
+    fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor='LightGray')
+    fig.update_yaxes(showgrid=True, gridwidth=0.5, gridcolor='LightGray')
     
     st.plotly_chart(fig, use_container_width=True)
 
